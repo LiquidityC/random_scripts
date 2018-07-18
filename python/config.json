@@ -1,0 +1,13 @@
+{
+    "workspace_path": "/home/linus/ws",
+    "projects": [
+        "Verisale",
+        "crm41service",
+        "xbn",
+        "sbn-common",
+        "Platform",
+        "sbnsql",
+        "ConfigurationManagement",
+        "mq-metadata"
+    ]
+}
