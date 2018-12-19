@@ -140,6 +140,16 @@ class GitInterface:
             print("%sExiting...%s" % (RED, CLEAR))
             sys.exit(0)
 
+    def stat_repos(self):
+        global GREEN, RED, CLEAR
+        print("%sPrinting status for all repos:%s" % (GREEN, CLEAR))
+        def op(repo):
+            if repo.is_dirty():
+                print("--> %sDirty:%s %s" % (RED, CLEAR, repo.working_dir))
+            else:
+                print("--> %sClean:%s %s" % (GREEN, CLEAR, repo.working_dir))
+        self.__execute(op)
+
     def pull_repos(self):
         global GREEN, CLEAR
 
@@ -236,11 +246,12 @@ def print_usage(include_description = False):
     print("    -D branch,--delete=branch        Delete provided branch")
     print("    -t tag,--tag=tag                 Create tag locally")
     print("    -T tag,--remote-tag=tag          Create tag locally and remotely")
+    print("    -s,--stat                        Check dirty status for repos")
     print("    -p,--pull                        Pull the repo")
     print("    -f,--fetch                       Fetch the repo")
 
 def get_options():
-    return ("c:C:D:pfht:T:", [
+    return ("c:C:D:pfht:T:s", [
         "checkout=",
         "create=",
         "delete=",
@@ -248,7 +259,8 @@ def get_options():
         "fetch",
         "help",
         "tag=",
-        "remote-tag="
+        "remote-tag=",
+        "stat"
         ])
 
 def parse_options(opts):
@@ -271,6 +283,9 @@ def parse_options(opts):
         elif opt in ("-D", "--delete"):
             def cmd(git, arg):
                 git.delete_branch(arg)
+        elif opt in ("-s", "--stat"):
+            def cmd(git, arg):
+                git.stat_repos()
         elif opt in ("-p", "--pull"):
             def cmd(git, arg):
                 git.pull_repos()
