@@ -186,6 +186,15 @@ class GitInterface:
             repo.git.checkout('HEAD', b=branch)
         self.__execute(op)
 
+    def create_branch_if_dirty(self, branch):
+        global GREEN, CLEAR
+        print("%sCreating branch %s in dirty repos%s" % (GREEN, branch, CLEAR))
+        def op(repo):
+            if (repo.is_dirty()):
+                print("--> %sCreating branch:%s %s in %s" % (GREEN, CLEAR, branch, repo.working_dir))
+                repo.git.checkout('HEAD', b=branch)
+        self.__execute(op)
+
     def checkout_branch(self, branch):
         global GREEN, CLEAR
         self.__dirty_check()
@@ -240,20 +249,22 @@ def print_usage(include_description = False):
         print("        %% %s -p -c master -p -c other_branch -p" % sys.argv[0])
     print("")
     print("OPTIONS:")
-    print("    -h,--help                        Print detailed instructions")
-    print("    -c branch,--checkout=branch      Checkout a provided branch")
-    print("    -C branch,--create=branch        Create provided branch")
-    print("    -D branch,--delete=branch        Delete provided branch")
-    print("    -t tag,--tag=tag                 Create tag locally")
-    print("    -T tag,--remote-tag=tag          Create tag locally and remotely")
-    print("    -s,--stat                        Check dirty status for repos")
-    print("    -p,--pull                        Pull the repo")
-    print("    -f,--fetch                       Fetch the repo")
+    print("    -h,--help                            Print detailed instructions")
+    print("    -c branch,--checkout=branch          Checkout a provided branch")
+    print("    -C branch,--create=branch            Create provided branch")
+    print("    -b branch,--create-if-dirty=branch   Create provided branch if repo is dirty")
+    print("    -D branch,--delete=branch            Delete provided branch")
+    print("    -t tag,--tag=tag                     Create tag locally")
+    print("    -T tag,--remote-tag=tag              Create tag locally and remotely")
+    print("    -s,--stat                            Check dirty status for repos")
+    print("    -p,--pull                            Pull the repo")
+    print("    -f,--fetch                           Fetch the repo")
 
 def get_options():
-    return ("c:C:D:pfht:T:s", [
+    return ("c:C:b:D:pfht:T:s", [
         "checkout=",
         "create=",
+        "create-if-dirty=",
         "delete=",
         "pull",
         "fetch",
@@ -280,6 +291,9 @@ def parse_options(opts):
         elif opt in ("-C", "--create"):
             def cmd(git, arg):
                 git.create_branch(arg)
+        elif opt in ("-b", "--create-if-dirty"):
+            def cmd(git, arg):
+                git.create_branch_if_dirty(arg)
         elif opt in ("-D", "--delete"):
             def cmd(git, arg):
                 git.delete_branch(arg)
