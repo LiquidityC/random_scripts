@@ -10,6 +10,8 @@ import getopt
 from git import Repo
 from git import RemoteProgress
 
+from pprint import pprint
+
 KEY_PROJECTS = "projects"
 KEY_WORKSPACE = "workspace_path"
 CONFIG_FILENAME = "config.json"
@@ -17,7 +19,8 @@ CONFIG_FILENAME = "config.json"
 CLEAR = "\033[0m"
 RED = "\033[31m"
 GREEN = "\033[32m"
-BLUE = "\033[33m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
 
 VALID_PROJECTS = [
         # Setup default projects here
@@ -141,13 +144,25 @@ class GitInterface:
             sys.exit(0)
 
     def stat_repos(self):
-        global GREEN, RED, CLEAR
+        global GREEN, RED, CLEAR, YELLOW
         print("%sPrinting status for all repos:%s" % (GREEN, CLEAR))
         def op(repo):
             if repo.is_dirty():
-                print("--> %sDirty:%s %s" % (RED, CLEAR, repo.working_dir))
+                print("--> %sDirty:%s %s %s(%s)%s" % (RED, CLEAR, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
             else:
-                print("--> %sClean:%s %s" % (GREEN, CLEAR, repo.working_dir))
+                print("--> %sClean:%s %s %s(%s)%s" % (GREEN, CLEAR, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
+        self.__execute(op)
+
+    # This is pretty untested. Not sure if it works
+    def review(self):
+        global GREEN, YELLOW, RED, CLEAR
+        print("%sSubmitting repos not on master to review:%s" % (GREEN, CLEAR))
+        def op(repo):
+            if repo.active_branch.name != "master":
+                print("--> %sSubmitting %s %s(%s)%s for review%s" % (GREEN, repo.working_dir, YELLOW, repo.active_branch, GREEN, CLEAR))
+                repo.git.review()
+            else:
+                print("--> %sIgnoring %s %s(%s)%s" % (RED, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
         self.__execute(op)
 
     def pull_repos(self):
@@ -254,6 +269,7 @@ def print_usage(include_description = False):
     print("    -C branch,--create=branch            Create provided branch")
     print("    -b branch,--create-if-dirty=branch   Create provided branch if repo is dirty")
     print("    -D branch,--delete=branch            Delete provided branch")
+    print("    -r,--review                          Submit for review if branch != 'master' (beta)")
     print("    -t tag,--tag=tag                     Create tag locally")
     print("    -T tag,--remote-tag=tag              Create tag locally and remotely")
     print("    -s,--stat                            Check dirty status for repos")
@@ -261,7 +277,8 @@ def print_usage(include_description = False):
     print("    -f,--fetch                           Fetch the repo")
 
 def get_options():
-    return ("c:C:b:D:pfht:T:s", [
+    return ("rc:C:b:D:pfht:T:s", [
+        "review",
         "checkout=",
         "create=",
         "create-if-dirty=",
@@ -309,6 +326,9 @@ def parse_options(opts):
         elif opt in ("-t", "--tag"):
             def cmd(git, arg):
                 git.create_tag(arg)
+        elif opt in ("-r", "--review"):
+            def cmd(git, arg):
+                git.review()
         elif opt in ("-T", "--remote-tag"):
             def cmd(git, arg):
                 git.create_tag(arg)
