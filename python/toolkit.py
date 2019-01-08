@@ -210,6 +210,15 @@ class GitInterface:
                 repo.git.checkout('HEAD', b=branch)
         self.__execute(op)
 
+    def stash(self):
+        global GREEN, CLEAR
+        print("%sStashing dirty repos%s" % (GREEN, CLEAR))
+        def op(repo):
+            if (repo.is_dirty()):
+                print("--> %sStashing repo: %s%s" % (GREEN, CLEAR, repo.working_dir))
+                repo.git.stash()
+        self.__execute(op)
+
     def checkout_branch(self, branch):
         global GREEN, CLEAR
         self.__dirty_check()
@@ -275,9 +284,10 @@ def print_usage(include_description = False):
     print("    -s,--stat                            Check dirty status for repos")
     print("    -p,--pull                            Pull the repo")
     print("    -f,--fetch                           Fetch the repo")
+    print("    -S,--stash                           Stash dirty repos")
 
 def get_options():
-    return ("rc:C:b:D:pfht:T:s", [
+    return ("rc:C:b:D:pfht:T:sS", [
         "review",
         "checkout=",
         "create=",
@@ -288,7 +298,8 @@ def get_options():
         "help",
         "tag=",
         "remote-tag=",
-        "stat"
+        "stat",
+        "stash"
         ])
 
 def parse_options(opts):
@@ -333,6 +344,9 @@ def parse_options(opts):
             def cmd(git, arg):
                 git.create_tag(arg)
                 git.push_tag(arg)
+        elif opt in ("-S", "--stash"):
+            def cmd(git, arg):
+                git.stash();
         else:
             def cmd(git):
                 print("Unknown operation %s(%s) requested" % (opt, arg))
