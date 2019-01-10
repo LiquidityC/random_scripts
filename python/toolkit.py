@@ -156,6 +156,7 @@ class GitInterface:
     # This is pretty untested. Not sure if it works
     def review(self):
         global GREEN, YELLOW, RED, CLEAR
+        self.__dirty_check()
         print("%sSubmitting repos not on master to review:%s" % (GREEN, CLEAR))
         def op(repo):
             if repo.active_branch.name != "master":
