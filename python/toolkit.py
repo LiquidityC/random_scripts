@@ -36,16 +36,16 @@ class ProgressPrinter(RemoteProgress):
     def update(self, op_code, cur_count, max_count=None, message=""):
         print("\r", end="")
         if not max_count and message != "done":
-            print("[", " " * self.total_steps, "] ", cur_count, " ", message, sep="", end="")
+            print("    [", " " * self.total_steps, "] ", cur_count, " ", message, sep="", end="")
             return
         elif not max_count and message == "done":
-            print("[", "=" * self.total_steps, "] ", cur_count, " ", message, sep="")
+            print("    [", "=" * self.total_steps, "] ", cur_count, " ", message, sep="")
             return
 
         step = max_count/self.total_steps
         steps = int(cur_count/step)
         remaining_steps = self.total_steps - steps
-        print("[", "=" * steps, ">" if remaining_steps > 0 else "",
+        print("    [", "=" * steps, ">" if remaining_steps > 0 else "",
               " " * (remaining_steps - 1), "]", sep="", end=" ")
         print(" ", cur_count, "/", max_count, sep="", end="")
         print(" ", message, end="", sep="")
