@@ -21,6 +21,9 @@ def listen(host, port):
                 print("[**] -------------- BEGIN DATA --------------")
                 print(str(data))
                 print("[**] -------------- END DATA ----------------")
+            else:
+                print("[!!] Received nothing, terminating client")
+                break
 
         cur_connection.close()
 
