@@ -6,6 +6,7 @@ import os
 import json
 import sys
 import getopt
+import termstyle as sty
 
 from git import Repo
 from git import RemoteProgress
@@ -15,12 +16,6 @@ from pprint import pprint
 KEY_PROJECTS = "projects"
 KEY_WORKSPACE = "workspace_path"
 CONFIG_FILENAME = "config.json"
-
-CLEAR = "\033[0m"
-RED = "\033[31m"
-GREEN = "\033[32m"
-YELLOW = "\033[33m"
-BLUE = "\033[34m"
 
 VALID_PROJECTS = [
         # Setup default projects here
@@ -126,124 +121,110 @@ class GitInterface:
                 self.__print_exception(e)
 
     def __print_exception(self, e):
-        global RED, CLEAR
-        print("  ", "%sFailed%s:" % (RED, CLEAR), e)
+        print("  ", "%sFailed%s:" % (sty.red, sty.reset), e)
 
     def __any_repo_dirty(self):
-        global RED, CLEAR
         for repo in self.repo_list:
             if repo.is_dirty():
-                print("%s%s is in dirty state %s" % (RED, repo.working_dir, CLEAR))
+                print("%s%s is in dirty state %s" % (sty.red, repo.working_dir, sty.reset))
                 return True
         return False
 
     def __dirty_check(self):
-        global RED, CLEAR
         if self.__any_repo_dirty():
-            print("%sExiting...%s" % (RED, CLEAR))
+            print("%sExiting...%s" % (sty.red, sty.reset))
             sys.exit(0)
 
     def stat_repos(self):
-        global GREEN, RED, CLEAR, YELLOW
-        print("%sPrinting status for all repos:%s" % (GREEN, CLEAR))
+        print("%sPrinting status for all repos:%s" % (sty.green, sty.reset))
         def op(repo):
             if repo.is_dirty():
-                print("--> %sDirty:%s %s %s(%s)%s" % (RED, CLEAR, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
+                print("--> %sDirty:%s %s %s(%s)%s" % (sty.red, sty.reset, repo.working_dir, sty.yellow, repo.active_branch, sty.reset))
             else:
-                print("--> %sClean:%s %s %s(%s)%s" % (GREEN, CLEAR, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
+                print("--> %sClean:%s %s %s(%s)%s" % (sty.green, sty.reset, repo.working_dir, sty.yellow, repo.active_branch, sty.reset))
         self.__execute(op)
 
     # This is pretty untested. Not sure if it works
     def review(self):
-        global GREEN, YELLOW, RED, CLEAR
         self.__dirty_check()
-        print("%sSubmitting repos not on master to review:%s" % (GREEN, CLEAR))
+        print("%sSubmitting repos not on master to review:%s" % (sty.green, sty.reset))
         def op(repo):
             if repo.active_branch.name != "master":
-                print("--> %sSubmitting %s %s(%s)%s for review%s" % (GREEN, repo.working_dir, YELLOW, repo.active_branch, GREEN, CLEAR))
+                print("--> %sSubmitting %s %s(%s)%s for review%s" % (sty.green, repo.working_dir, sty.yellow, repo.active_branch, sty.green, sty.reset))
                 repo.git.review()
             else:
-                print("--> %sIgnoring %s %s(%s)%s" % (RED, repo.working_dir, YELLOW, repo.active_branch, CLEAR))
+                print("--> %sIgnoring %s %s(%s)%s" % (sty.red, repo.working_dir, sty.yellow, repo.active_branch, sty.reset))
         self.__execute(op)
 
     def pull_repos(self):
-        global GREEN, CLEAR
 
         self.__dirty_check()
-        print("%sPulling all repos%s" % (GREEN, CLEAR))
+        print("%sPulling all repos%s" % (sty.green, sty.reset))
         def op(repo):
-            print("--> %sPulling:%s %s" % (GREEN, CLEAR, repo.working_dir))
+            print("--> %sPulling:%s %s" % (sty.green, sty.reset, repo.working_dir))
             repo.remotes.origin.pull(progress=ProgressPrinter())
         self.__execute(op)
 
     def fetch_repos(self):
-        global GREEN, CLEAR
-        print("%sFetching all repos%s" % (GREEN, CLEAR))
+        print("%sFetching all repos%s" % (sty.green, sty.reset))
         def op(repo):
-            print("--> %sFetching:%s %s" % (GREEN, CLEAR, repo.working_dir))
+            print("--> %sFetching:%s %s" % (sty.green, sty.reset, repo.working_dir))
             repo.remotes.origin.fetch(progress=ProgressPrinter())
         self.__execute(op)
 
     def delete_branch(self, branch):
-        global GREEN, CLEAR
         self.__dirty_check()
-        print("%sDeleting branch %s in all repos%s" % (GREEN, branch, CLEAR))
+        print("%sDeleting branch %s in all repos%s" % (sty.green, branch, sty.reset))
         def op(repo):
-            print("--> %sDeleting branch:%s %s in %s" % (GREEN, CLEAR, branch, repo.working_dir))
+            print("--> %sDeleting branch:%s %s in %s" % (sty.green, sty.reset, branch, repo.working_dir))
             repo.git.branch("-D", branch)
         self.__execute(op)
 
     def create_branch(self, branch):
-        global GREEN, CLEAR
         self.__dirty_check()
-        print("%sCreating branch %s in all repos%s" % (GREEN, branch, CLEAR))
+        print("%sCreating branch %s in all repos%s" % (sty.green, branch, sty.reset))
         def op(repo):
-            print("--> %sCreating branch:%s %s in %s" % (GREEN, CLEAR, branch, repo.working_dir))
+            print("--> %sCreating branch:%s %s in %s" % (sty.green, sty.reset, branch, repo.working_dir))
             repo.git.checkout('HEAD', b=branch)
         self.__execute(op)
 
     def create_branch_if_dirty(self, branch):
-        global GREEN, CLEAR
-        print("%sCreating branch %s in dirty repos%s" % (GREEN, branch, CLEAR))
+        print("%sCreating branch %s in dirty repos%s" % (sty.green, branch, sty.reset))
         def op(repo):
             if (repo.is_dirty()):
-                print("--> %sCreating branch:%s %s in %s" % (GREEN, CLEAR, branch, repo.working_dir))
+                print("--> %sCreating branch:%s %s in %s" % (sty.green, sty.reset, branch, repo.working_dir))
                 repo.git.checkout('HEAD', b=branch)
         self.__execute(op)
 
     def stash(self):
-        global GREEN, CLEAR
-        print("%sStashing dirty repos%s" % (GREEN, CLEAR))
+        print("%sStashing dirty repos%s" % (sty.green, sty.reset))
         def op(repo):
             if (repo.is_dirty()):
-                print("--> %sStashing repo: %s%s" % (GREEN, CLEAR, repo.working_dir))
+                print("--> %sStashing repo: %s%s" % (sty.green, sty.reset, repo.working_dir))
                 repo.git.stash()
         self.__execute(op)
 
     def checkout_branch(self, branch):
-        global GREEN, CLEAR
         self.__dirty_check()
-        print("%sChecking out %s for all repos%s" % (GREEN, branch, CLEAR))
+        print("%sChecking out %s for all repos%s" % (sty.green, branch, sty.reset))
         def op(repo):
-            print("--> %sChecking out:%s %s for %s" % (GREEN, CLEAR, branch, repo.working_dir))
+            print("--> %sChecking out:%s %s for %s" % (sty.green, sty.reset, branch, repo.working_dir))
             repo.git.checkout(branch)
         self.__execute(op)
 
     def create_tag(self, tag):
-        global GREEN, CLEAR
         self.__dirty_check()
-        print("%sCreating tag '%s' in all repos%s" % (GREEN, tag, CLEAR))
+        print("%sCreating tag '%s' in all repos%s" % (sty.green, tag, sty.reset))
         def op(repo):
-            print("--> %sCreating tag:%s %s for %s" % (GREEN, CLEAR, tag, repo.working_dir))
+            print("--> %sCreating tag:%s %s for %s" % (sty.green, sty.reset, tag, repo.working_dir))
             repo.create_tag(tag)
         self.__execute(op)
 
     def push_tag(self, tag):
-        global GREEN, CLEAR
         self.__dirty_check()
-        print("%sPushing tag '%s' in all repos%s" % (GREEN, tag, CLEAR))
+        print("%sPushing tag '%s' in all repos%s" % (sty.green, tag, sty.reset))
         def op(repo):
-            print("--> %sPushing tag:%s %s for %s" % (GREEN, CLEAR, tag, repo.working_dir))
+            print("--> %sPushing tag:%s %s for %s" % (sty.green, sty.reset, tag, repo.working_dir))
             repo.git.push("origin", "tag", tag)
         self.__execute(op)
 
@@ -374,7 +355,7 @@ if __name__ == "__main__":
         ws_path = config.get(KEY_WORKSPACE)
         projects = config.get(KEY_PROJECTS)
 
-        print("%sConfigured workspace path:%s %s" % (GREEN, CLEAR, ws_path))
+        print("%sConfigured workspace path:%s %s" % (sty.green, sty.reset, ws_path))
         git = GitInterface(get_repo_list(ws_path))
 
         for cmd in commands:
