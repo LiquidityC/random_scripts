@@ -156,11 +156,25 @@ class GitInterface:
                 print("--> %sIgnoring %s %s(%s)%s" % (sty.red, repo.working_dir, sty.yellow, repo.active_branch, sty.reset))
         self.__execute(op)
 
-    def pull_repos(self):
-
-        self.__dirty_check()
-        print("%sPulling all repos%s" % (sty.green, sty.reset))
+    def pull_all_repos(self):
+        print("%sPulling all clean repos%s" % (sty.green, sty.reset))
         def op(repo):
+            if repo.is_dirty():
+                print("--> %sSkipping:%s %s" % (sty.red, sty.reset, repo.working_dir))
+                return
+            print("--> %sPulling:%s %s" % (sty.green, sty.reset, repo.working_dir))
+            repo.remotes.origin.pull(progress=ProgressPrinter())
+        self.__execute(op)
+
+    def pull_master_repos(self):
+        print("%sPulling all clean master repos%s" % (sty.green, sty.reset))
+        def op(repo):
+            if repo.is_dirty():
+                print("--> %sSkipping:%s %s \t%s(dirty)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, sty.reset))
+                return
+            if repo.active_branch.name != "master":
+                print("--> %sSkipping:%s %s \t%s(branch: %s)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, repo.active_branch, sty.reset))
+                return
             print("--> %sPulling:%s %s" % (sty.green, sty.reset, repo.working_dir))
             repo.remotes.origin.pull(progress=ProgressPrinter())
         self.__execute(op)
@@ -264,7 +278,8 @@ def print_usage(include_description = False):
     print("    -t tag,--tag=tag                     Create tag locally")
     print("    -T tag,--remote-tag=tag              Create tag locally and remotely")
     print("    -s,--stat                            Check dirty status for repos")
-    print("    -p,--pull                            Pull the repo")
+    print("    -P,--pull-all                        Pull all clean repos")
+    print("    -p,--pull                            Pull all clean repos in master branch")
     print("    -f,--fetch                           Fetch the repo")
     print("    -S,--stash                           Stash dirty repos")
 
@@ -276,6 +291,7 @@ def get_options():
         "create-if-dirty=",
         "delete=",
         "pull",
+        "pull-all",
         "fetch",
         "help",
         "tag=",
@@ -310,9 +326,12 @@ def parse_options(opts):
         elif opt in ("-s", "--stat"):
             def cmd(git, arg):
                 git.stat_repos()
+        elif opt in ("-P", "--pull-all"):
+            def cmd(git, arg):
+                git.pull_all_repos()
         elif opt in ("-p", "--pull"):
             def cmd(git, arg):
-                git.pull_repos()
+                git.pull_master_repos()
         elif opt in ("-f", "--fetch"):
             def cmd(git, arg):
                 git.fetch_repos()
