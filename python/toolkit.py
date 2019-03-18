@@ -57,7 +57,7 @@ class Config:
     def load(self):
         """Load a scriptfile"""
 
-        if not os.path.isfile(script_file):
+        if not os.path.isfile(self.script_file):
             return
 
         with open(self.script_file, "r") as fileobj:
@@ -359,7 +359,11 @@ def parse_options(opts):
 ### SCRIPT START
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    script_file = os.path.join(script_dir, CONFIG_FILENAME)
+
+    config_dir = os.path.join(os.path.expanduser("~"), ".config", "toolkit")
+    if not os.path.exists(config_dir):
+        os.mkdir(config_dir)
+    config_file = os.path.join(config_dir, CONFIG_FILENAME)
 
     try:
         opt_str, opt_list = get_options()
@@ -370,7 +374,7 @@ if __name__ == "__main__":
 
     commands = parse_options(opts)
 
-    with ConfigLoader(script_file) as config:
+    with ConfigLoader(config_file) as config:
         ws_path = config.get(KEY_WORKSPACE)
         projects = config.get(KEY_PROJECTS)
 
