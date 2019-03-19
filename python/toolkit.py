@@ -170,10 +170,10 @@ class GitInterface:
         print("%sPulling all clean master repos%s" % (sty.green, sty.reset))
         def op(repo):
             if repo.is_dirty():
-                print("--> %sSkipping:%s %s \t%s(dirty)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, sty.reset))
+                print("--> %sSkipping:%s %s %s(dirty)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, sty.reset))
                 return
             if repo.active_branch.name != "master":
-                print("--> %sSkipping:%s %s \t%s(branch: %s)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, repo.active_branch, sty.reset))
+                print("--> %sSkipping:%s %s %s(branch: %s)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, repo.active_branch, sty.reset))
                 return
             print("--> %sPulling:%s %s" % (sty.green, sty.reset, repo.working_dir))
             repo.remotes.origin.pull(progress=ProgressPrinter())
@@ -219,11 +219,13 @@ class GitInterface:
         self.__execute(op)
 
     def checkout_branch(self, branch):
-        self.__dirty_check()
         print("%sChecking out %s for all repos%s" % (sty.green, branch, sty.reset))
         def op(repo):
-            print("--> %sChecking out:%s %s for %s" % (sty.green, sty.reset, branch, repo.working_dir))
-            repo.git.checkout(branch)
+            if repo.is_dirty():
+                print("--> %sSkipping:%s %s for %s %s(dirty)%s" % (sty.red, sty.reset, branch, repo.working_dir, sty.red, sty.reset))
+            else:
+                print("--> %sChecking out:%s %s for %s" % (sty.green, sty.reset, branch, repo.working_dir))
+                repo.git.checkout(branch)
         self.__execute(op)
 
     def create_tag(self, tag):
