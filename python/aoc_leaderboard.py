@@ -20,8 +20,9 @@ with requests.get(url, cookies=cookies) as response:
         sys.exit(1)
 
     jsonData = response.json()
-    users = sorted([ u for u in jsonData["members"].values() ], key=lambda u: u["local_score"])
-    users.reverse()
+    users = sorted([ u for u in jsonData["members"].values() ],
+            key=lambda u: u["local_score"],
+            reverse=True)
     for user in users:
         print("%s:\t%s\t%s" %
                 (
