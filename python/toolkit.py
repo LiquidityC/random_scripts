@@ -172,7 +172,7 @@ class GitInterface:
             if repo.is_dirty():
                 print("--> %sSkipping:%s %s %s(dirty)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, sty.reset))
                 return
-            if repo.active_branch.name != "master":
+            if repo.active_branch.name != "master" and repo.active_branch.name != "develop":
                 print("--> %sSkipping:%s %s %s(branch: %s)%s" % (sty.red, sty.reset, repo.working_dir, sty.red, repo.active_branch, sty.reset))
                 return
             print("--> %sPulling:%s %s" % (sty.green, sty.reset, repo.working_dir))
